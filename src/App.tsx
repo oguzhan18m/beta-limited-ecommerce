@@ -1,26 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import AppThemeProvider from "./theme/AppThemeProvider";
+import AppLayout from "./layout/AppLayout";
+import Products from "./pages/products/Products";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { ReactQueryDevtools } from "react-query/devtools";
+
+const queryClient = new QueryClient();
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	return (
+		<AppThemeProvider>
+			<QueryClientProvider client={queryClient}>
+				<AppLayout>
+					<Products />
+					<ReactQueryDevtools initialIsOpen={false} />
+				</AppLayout>
+			</QueryClientProvider>
+		</AppThemeProvider>
+	);
 }
 
 export default App;
