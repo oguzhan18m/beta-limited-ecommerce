@@ -1,6 +1,6 @@
 import { IconButton, Stack, useMediaQuery, useTheme } from "@mui/material";
 import React from "react";
-import { Search, SearchRounded } from "@mui/icons-material";
+import { SearchRounded } from "@mui/icons-material";
 import SearchAutoComplete from "./SearchAutoComplete";
 import SearchModal from "./SearchModal";
 
@@ -29,6 +29,7 @@ const SearchProduct = () => {
 					setOpen={setOpen}
 					input={input}
 					setInput={setInput}
+					setIsSearchModalOpen={setIsSearchModalOpen}
 				/>
 			)}
 
@@ -40,6 +41,7 @@ const SearchProduct = () => {
 					setOpen={setOpen}
 					input={input}
 					setInput={setInput}
+					setIsSearchModalOpen={setIsSearchModalOpen}
 				/>{" "}
 			</SearchModal>
 		</Stack>

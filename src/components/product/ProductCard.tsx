@@ -4,7 +4,14 @@ import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import { IProduct } from "../../types/products";
-import { Chip, Grid, IconButton, Rating, Stack } from "@mui/material";
+import {
+	Chip,
+	CircularProgress,
+	Grid,
+	IconButton,
+	Rating,
+	Stack,
+} from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import { useAddToCart } from "../../queries/cart/useAddToCart";
@@ -21,15 +28,19 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 	const queryClient = useQueryClient();
 	const cartItems = useCartStore((state) => state.items);
 
-	const { mutateAsync: addToCart } = useAddToCart({
-		onSuccess: () => {
-			queryClient.invalidateQueries(QueryKeys.GET_CART);
-		},
-	});
+	const { mutateAsync: addToCart, isLoading: isAddToCartLoading } =
+		useAddToCart({
+			onSuccess: () => {
+				queryClient.refetchQueries(QueryKeys.GET_CART);
+			},
+		});
 
-	const { mutateAsync: subtractFromCart } = useSubtractFromCart({
+	const {
+		mutateAsync: subtractFromCart,
+		isLoading: isSubtractFromCartLoading,
+	} = useSubtractFromCart({
 		onSuccess: () => {
-			queryClient.invalidateQueries(QueryKeys.GET_CART);
+			queryClient.refetchQueries(QueryKeys.GET_CART);
 		},
 	});
 
@@ -44,7 +55,8 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 	const quantity: number = React.useMemo(
 		() =>
 			Number(
-				cartItems?.find((item) => item?.productId === product?.id)?.quantity
+				Array.isArray(cartItems) &&
+					cartItems?.find((item) => item?.productId === product?.id)?.quantity
 			),
 		[cartItems]
 	);
@@ -52,12 +64,11 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 	return (
 		<Card sx={{ p: 0 }} elevation={4}>
 			<CardContent sx={{ p: "0px", pb: 1 }}>
-				<Stack width="100%" position="relative">
+				<Stack width="100%" position="relative" bgcolor="#f4f7ff">
 					<CardMedia
 						component="img"
 						height="100%"
 						width={"100%"}
-						// image="https://masabakery.in/cdn/shop/files/Croissant-min.jpg?v=1690781324"
 						image={product?.image as string}
 						alt="Paella dish"
 					/>
@@ -69,7 +80,7 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 						sx={{ position: "absolute", left: 10, top: 10 }}
 					/>
 				</Stack>
-				<Stack width="100%" px={2} pt={2}>
+				<Stack width="100%" px={2} pt={2} height="116px">
 					<Grid container>
 						<Grid item xs={10}>
 							<Typography fontWeight="bold" variant="body1">
@@ -110,6 +121,7 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 								{quantity >= 1 && (
 									<>
 										<IconButton
+											disabled={isSubtractFromCartLoading}
 											color="primary"
 											size="small"
 											sx={{
@@ -118,7 +130,11 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 												border: "1px solid #c34b5b",
 											}}
 											onClick={() => handleSubtractFromCart(product?.id)}>
-											<RemoveIcon />
+											{isSubtractFromCartLoading ? (
+												<CircularProgress size={24} color="primary" />
+											) : (
+												<RemoveIcon />
+											)}
 										</IconButton>
 										<Typography
 											my={1}
@@ -130,6 +146,7 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 									</>
 								)}
 								<IconButton
+									disabled={isAddToCartLoading}
 									size="small"
 									sx={{
 										p: 0.5,
@@ -137,7 +154,11 @@ const ProductCard: React.FC<Props> = ({ product }) => {
 										border: "1px solid #c34b5b",
 									}}
 									onClick={() => handleAddToCart(product?.id)}>
-									<AddIcon color="primary" />
+									{isAddToCartLoading ? (
+										<CircularProgress size={24} color="primary" />
+									) : (
+										<AddIcon color="primary" />
+									)}
 								</IconButton>
 							</Stack>
 						</Grid>

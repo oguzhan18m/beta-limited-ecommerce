@@ -5,6 +5,5 @@ export const axiosInt = axios.create({
 	headers: {
 		Accept: "*/*",
 		"Access-Control-Allow-Origin": "*",
-		"Session-ID": window.localStorage.getItem("sessionId") || "",
 	},
 });

@@ -1,19 +1,20 @@
-import { CircularProgress, Container, Grid, Typography } from "@mui/material";
+import { Container, Grid, Typography } from "@mui/material";
 import React from "react";
 import { useGetProducts } from "../../queries/products/useGetProducts";
-import { useCreateSession } from "../../queries/session/useCreateSession";
 import { IProduct } from "../../types/products";
 import ProductCard from "../../components/product/ProductCard";
 import { useCartStore } from "../../store/cart/useCartStore";
 import CartDrawer from "../../components/cart/CartDrawer";
 import { useProductStore } from "../../store/product/useProductStore";
 import ProductModal from "../../components/product/ProductModal";
+import { useGetCart } from "../../queries/cart/useGetCart";
+import ProductsSkeleton from "../../components/product/ProductsSkeleton";
 
-interface Props {}
+interface Props {
+	isLoading: boolean;
+}
 
-const Products: React.FC<Props> = ({}) => {
-	const hasSession = window.localStorage.getItem("sessionId") ?? false;
-
+const Products: React.FC<Props> = ({ isLoading }) => {
 	const isCartDrawerOpen = useCartStore((state) => state.isCartDrawerOpen);
 	const setIsCartDrawerOpen = useCartStore((state) => state.setCartDrawerOpen);
 	const selectedProduct = useProductStore((state) => state.selectedProduct);
@@ -24,23 +25,20 @@ const Products: React.FC<Props> = ({}) => {
 		(state) => state.setIsProductModalOpen
 	);
 
-	const { isLoading } = useCreateSession({
-		enabled: hasSession ? false : true,
-		retry: 0,
-		refetchOnWindowFocus: false,
-		onSuccess: (resp: string | undefined) => {
-			if (resp) {
-				window.localStorage.setItem("sessionId", resp);
-			}
+	const productsData = useProductStore((state) => state.products);
+	const setProducts = useProductStore((state) => state.setProducts);
+
+	useGetProducts({
+		onSuccess: (resp: IProduct[] | undefined) => {
+			if (!resp) return;
+			setProducts(resp);
 		},
 	});
 
-	const { data: productsData } = useGetProducts({
-		enabled: hasSession ? true : false,
-	});
+	const { isLoading: isCartLoading } = useGetCart();
 
-	if (isLoading) {
-		return <CircularProgress size={24} />;
+	if (isLoading || isCartLoading) {
+		return <ProductsSkeleton />;
 	}
 
 	return (
@@ -49,6 +47,9 @@ const Products: React.FC<Props> = ({}) => {
 				Products
 			</Typography>
 			<Grid container spacing={2} mt={4}>
+				{productsData?.length === 0 && (
+					<Typography variant="body1">No products found.</Typography>
+				)}
 				{productsData?.map((product: IProduct) => (
 					<Grid key={product?.id} item xs={12} sm={6} lg={4}>
 						<ProductCard product={product} />

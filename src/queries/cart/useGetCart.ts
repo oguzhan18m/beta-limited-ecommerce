@@ -1,6 +1,5 @@
 import { useQuery, UseQueryOptions, UseQueryResult } from "react-query";
 import { QueryKeys } from "../query-keys";
-import { IProduct } from "../../types/products";
 import { axiosInt } from "../../utils/axios";
 import { ICardItem } from "../../types/cart";
 

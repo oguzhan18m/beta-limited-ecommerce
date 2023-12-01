@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Box, Button, Divider, Drawer, Stack, Typography } from "@mui/material";
 import { useGetCart } from "../../queries/cart/useGetCart";
 import CardItem from "./CardItem";
@@ -13,10 +13,15 @@ interface CartDrawerProps {
 
 const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, setIsOpen }) => {
 	const setCart = useCartStore((state) => state.setCart);
-	const cartItemCount = useCartStore((state) =>
-		state.items.reduce((acc, item) => acc + item.quantity, 0)
-	);
 
+	const items = useCartStore((state) => state.items);
+
+	const cartItemsCount = useMemo(
+		() =>
+			Array.isArray(items) &&
+			items?.reduce((acc, item) => acc + item?.quantity, 0),
+		[items]
+	);
 	const { data: cartData } = useGetCart({
 		onSuccess: (resp: ICardItem[] | undefined) => {
 			if (!resp) return;
@@ -24,7 +29,10 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, setIsOpen }) => {
 		},
 	});
 
-	const isCartEmpty = React.useMemo(() => cartItemCount === 0, [cartItemCount]);
+	const isCartEmpty = React.useMemo(
+		() => cartItemsCount === 0 || cartItemsCount === false,
+		[cartItemsCount]
+	);
 
 	return (
 		<Drawer
@@ -41,7 +49,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, setIsOpen }) => {
 				<Stack mb={4} width={"100%"} direction="row" alignItems="center">
 					<ShoppingCart fontSize="medium" />
 					<Typography ml={2} variant="h6" fontWeight="bold">
-						Shopping Cart ({cartItemCount})
+						Shopping Cart ({isCartEmpty ? 0 : cartItemsCount})
 					</Typography>
 				</Stack>
 				<Divider />
@@ -51,6 +59,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, setIsOpen }) => {
 							<Typography variant="body1">No items found.</Typography>
 						</Box>
 					) : (
+						Array.isArray(cartData) &&
 						cartData
 							?.filter((x) => x?.quantity >= 1)
 							?.map((item) => <CardItem key={item?.productId} item={item} />)
@@ -63,22 +72,25 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, setIsOpen }) => {
 					direction="row"
 					justifyContent="space-between"
 					alignItems="center">
-					<Stack direction="row" alignItems="center">
-						<Typography variant="body1" fontWeight="bold">
-							Total:
-						</Typography>
-						<Typography
-							ml={1}
-							color="primary"
-							variant="body1"
-							fontWeight="bold">
-							$
-							{cartData
-								?.reduce((acc, item) => acc + item.price * item.quantity, 0)
-								.toFixed(2)}
-						</Typography>
-					</Stack>
-					<Button variant="contained" color="primary">
+					{!isCartEmpty && (
+						<Stack direction="row" alignItems="center">
+							<Typography variant="body1" fontWeight="bold">
+								Total:
+							</Typography>
+							<Typography
+								ml={1}
+								color="primary"
+								variant="body1"
+								fontWeight="bold">
+								$
+								{Array.isArray(cartData) &&
+									cartData
+										?.reduce((acc, item) => acc + item.price * item.quantity, 0)
+										.toFixed(2)}
+							</Typography>
+						</Stack>
+					)}
+					<Button disabled={isCartEmpty} variant="contained" color="primary">
 						Continue
 					</Button>
 				</Stack>

@@ -1,12 +1,6 @@
-import { ChevronRight, SearchRounded } from "@mui/icons-material";
-import {
-	Autocomplete,
-	CircularProgress,
-	Stack,
-	TextField,
-	Typography,
-} from "@mui/material";
-import React from "react";
+import { Close, Search } from "@mui/icons-material";
+import { Button, IconButton, InputBase, Paper } from "@mui/material";
+import React, { KeyboardEvent } from "react";
 import { useSearchProducts } from "../../queries/products/useSearchProducts";
 import { IProduct } from "../../types/products";
 import { useProductStore } from "../../store/product/useProductStore";
@@ -16,80 +10,81 @@ interface Props {
 	setOpen: (val: boolean) => void;
 	input: string;
 	setInput: (val: string) => void;
+	setIsSearchModalOpen: (val: boolean) => void;
 }
 
 const SearchAutoComplete: React.FC<Props> = ({
-	open,
-	setOpen,
 	input,
 	setInput,
+	setIsSearchModalOpen,
 }) => {
-	const setIsProductModalOpen = useProductStore(
-		(state) => state.setIsProductModalOpen
-	);
-	const setSelectedProduct = useProductStore(
-		(state) => state.setSelectedProduct
+	const setProducts = useProductStore((state) => state.setProducts);
+	const [searchText, setSearchText] = React.useState<string | undefined>(
+		undefined
 	);
 
-	const { data: productsData, isLoading } = useSearchProducts(input);
-
-	const handleOpenProductModal = (product: IProduct) => {
-		setSelectedProduct(product);
-		setIsProductModalOpen(true);
+	const handleClear = () => {
+		setSearchText("");
+		setInput("");
 	};
+
+	useSearchProducts(searchText as string, {
+		enabled: searchText !== undefined ? true : false,
+		onSuccess: (resp: IProduct[] | undefined) => {
+			if (!resp) return;
+			setProducts(resp);
+			setIsSearchModalOpen(false);
+		},
+	});
+
+	const handleSearch = () => {
+		setSearchText(input);
+	};
+
+	const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "Enter") {
+			handleSearch();
+		}
+	};
+
 	return (
-		<Autocomplete
-			sx={{ width: 450 }}
-			open={open}
-			onOpen={() => {
-				setOpen(true);
-			}}
-			onClose={() => {
-				setOpen(false);
-			}}
-			isOptionEqualToValue={(option, value) => option.name === value.name}
-			getOptionLabel={(option) => option.name}
-			disableClearable={false}
-			renderOption={(props, option) => (
-				<Stack
-					p={2}
-					sx={{
-						width: "100%",
-						display: "flex",
-						flexDirection: "row",
-						alignItems: "center",
-						justifyContent: "space-between",
-						cursor: "pointer",
-						borderBottom: "1px solid #ccc",
-					}}
-					onClick={() => handleOpenProductModal(option)}>
-					<Typography>{option?.name}</Typography>
-					<ChevronRight color="disabled" />
-				</Stack>
+		<Paper
+			elevation={0}
+			sx={{
+				display: "flex",
+				alignItems: "center",
+				width: { xs: "100%", lg: 500 },
+				borderRadius: 200,
+				pl: 2,
+				border: "1px solid #ccc",
+			}}>
+			<Search color="disabled" />
+			<InputBase
+				sx={{ ml: 1, flex: 1 }}
+				value={input}
+				onChange={(event) => setInput(event.target.value)}
+				placeholder="Searching for..."
+				onKeyDown={handleKeyPress}
+			/>
+			{searchText && searchText?.length > 0 && (
+				<IconButton onClick={handleClear}>
+					<Close />
+				</IconButton>
 			)}
-			options={productsData ?? []}
-			loading={isLoading}
-			renderInput={(params) => (
-				<TextField
-					{...params}
-					placeholder="Searching for..."
-					onChange={(event) => setInput(event.target.value)}
-					InputProps={{
-						...params.InputProps,
-						startAdornment: (
-							<SearchRounded fontSize="medium" color="disabled" />
-						),
-						endAdornment: (
-							<React.Fragment>
-								{isLoading ? (
-									<CircularProgress color="inherit" size={20} />
-								) : null}
-							</React.Fragment>
-						),
-					}}
-				/>
-			)}
-		/>
+			<Button
+				onClick={handleSearch}
+				variant="contained"
+				sx={{
+					bgcolor: "primary",
+					borderTopRightRadius: 200,
+					borderBottomRightRadius: 200,
+					height: 45,
+					width: 100,
+					ml: 1,
+				}}>
+				Search
+			</Button>
+		</Paper>
 	);
 };
 

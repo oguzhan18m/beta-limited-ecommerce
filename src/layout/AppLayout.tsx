@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
 	AppBar,
 	Toolbar,
@@ -32,9 +32,15 @@ const AppLayout: React.FC<Props> = ({ children }) => {
 	const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 	const [isLeftMenuDrawerOpen, setIsLeftMenuDrawerOpen] = useState(false);
 
-	const cartItemCount = useCartStore((state) =>
-		state.items.reduce((acc, item) => acc + item.quantity, 0)
+	const items = useCartStore((state) => state.items);
+
+	const cartItemsCount = useMemo(
+		() =>
+			Array.isArray(items) &&
+			items?.reduce((acc, item) => acc + item?.quantity, 0),
+		[items]
 	);
+
 	const setIsCartDrawerOpen = useCartStore((state) => state.setCartDrawerOpen);
 
 	const handleDrawerToggle = () => {
@@ -42,7 +48,7 @@ const AppLayout: React.FC<Props> = ({ children }) => {
 	};
 
 	return (
-		<Grid container>
+		<Grid container flex={1}>
 			<Grid item xs={12}>
 				<CssBaseline />
 				<AppBar
@@ -84,7 +90,10 @@ const AppLayout: React.FC<Props> = ({ children }) => {
 										size="large"
 										onClick={() => setIsCartDrawerOpen(true)}
 										color="primary">
-										<Badge badgeContent={cartItemCount} color="secondary">
+										<Badge
+											invisible={!cartItemsCount || cartItemsCount == 0}
+											badgeContent={cartItemsCount}
+											color="secondary">
 											<ShoppingCart />
 										</Badge>
 									</IconButton>

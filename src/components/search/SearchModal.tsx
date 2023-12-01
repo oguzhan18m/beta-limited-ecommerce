@@ -20,10 +20,6 @@ const SearchModal: React.FC<Props> = ({ isOpen, setIsOpen, children }) => {
 			sx={{
 				"& .MuiPaper-root": {
 					maxWidth: "unset",
-					width: {
-						xs: "95vw",
-						lg: "40vw",
-					},
 				},
 			}}
 			open={isOpen}

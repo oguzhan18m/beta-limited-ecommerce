@@ -1,6 +1,7 @@
 import {
 	Card,
 	CardContent,
+	CircularProgress,
 	Divider,
 	IconButton,
 	Stack,
@@ -22,13 +23,17 @@ interface Props {
 const CardItem: React.FC<Props> = ({ item }) => {
 	const queryClient = useQueryClient();
 
-	const { mutateAsync: addToCart } = useAddToCart({
-		onSuccess: () => {
-			queryClient.invalidateQueries(QueryKeys.GET_CART);
-		},
-	});
+	const { mutateAsync: addToCart, isLoading: isAddToCartLoading } =
+		useAddToCart({
+			onSuccess: () => {
+				queryClient.invalidateQueries(QueryKeys.GET_CART);
+			},
+		});
 
-	const { mutateAsync: subtractFromCart } = useSubtractFromCart({
+	const {
+		mutateAsync: subtractFromCart,
+		isLoading: isSubtractFromCartLoading,
+	} = useSubtractFromCart({
 		onSuccess: () => {
 			queryClient.invalidateQueries(QueryKeys.GET_CART);
 		},
@@ -69,6 +74,7 @@ const CardItem: React.FC<Props> = ({ item }) => {
 					</Typography>
 					<Stack direction="row" alignItems="center">
 						<IconButton
+							disabled={isSubtractFromCartLoading}
 							size="small"
 							color="primary"
 							sx={{
@@ -77,7 +83,11 @@ const CardItem: React.FC<Props> = ({ item }) => {
 								border: "1px solid #c34b5b",
 							}}
 							onClick={() => handleSubtractFromCart(item?.productId)}>
-							<RemoveIcon fontSize="small" />
+							{isSubtractFromCartLoading ? (
+								<CircularProgress size={24} color="primary" />
+							) : (
+								<RemoveIcon />
+							)}
 						</IconButton>
 						<Typography
 							mx={2}
@@ -87,6 +97,7 @@ const CardItem: React.FC<Props> = ({ item }) => {
 							{item?.quantity}
 						</Typography>
 						<IconButton
+							disabled={isAddToCartLoading}
 							size="small"
 							color="primary"
 							sx={{
@@ -95,7 +106,11 @@ const CardItem: React.FC<Props> = ({ item }) => {
 								border: "1px solid #c34b5b",
 							}}
 							onClick={() => handleAddToCart(item?.productId)}>
-							<AddIcon fontSize="small" />
+							{isAddToCartLoading ? (
+								<CircularProgress size={24} color="primary" />
+							) : (
+								<AddIcon color="primary" />
+							)}
 						</IconButton>
 					</Stack>
 				</Stack>
